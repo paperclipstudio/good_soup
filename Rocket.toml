@@ -1,0 +1,10 @@
+[default]
+address = "192.168.0.81"
+port = 8000
+workers = 16
+max_blocking = 512
+keep_alive = 5
+ident = "Rocket"
+log_level = "normal"
+temp_dir = "/tmp"
+cli_colors = true
