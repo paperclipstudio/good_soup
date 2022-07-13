@@ -1,5 +1,8 @@
 #[macro_use] extern crate rocket;
+//pub mod schema;
+//mod models;
 
+use diesel::Connection;
 use rocket::response::Redirect;
 use rocket_dyn_templates::Template;
 use rocket_dyn_templates::context;
@@ -23,11 +26,31 @@ fn index() -> Template {
     Template::render("login", context! {id:1})
 }
 
-#[get("/users")]
-async fn users(conn: UserDatabase) -> String {
-    return conn.run(|_| String::from("wow")).await
+#[derive(diesel::Queryable)]
+pub struct Test {
+    id:i32
 }
 
+#[derive(diesel::Queryable)]
+pub struct User {
+    id:i32,
+    name:String,
+    age:u32
+}
+
+fn do_something(conn: &diesel::MysqlConnection) -> String {
+    //let r2 = diesel::sql_query("SELECT * from USERS").load::<User>(conn);
+    //let results:Result<Vec<User>> = diesel::RunQueryDsl::load(diesel::sql_query("SELECT * from USERS"), conn).ok();
+    return "".to_string();
+
+}
+
+#[get("/users")]
+async fn users(conn: UserDatabase) -> String {
+    let mut results = 0;
+    //conn.run(|x| x.);
+    return (format!("{} users loading", results));
+}
 #[derive(FromForm)]
 struct Login<'r> {
     email:&'r str,
