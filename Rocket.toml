@@ -8,3 +8,7 @@ ident = "Rocket"
 log_level = "normal"
 temp_dir = "/tmp"
 cli_colors = true
+
+
+[global.databases.users]
+url = "mysql://remote@192.168.0.84/USERS"
