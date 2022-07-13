@@ -8,12 +8,11 @@ edition = "2021"
 [dependencies]
 rand = "0.7.3"
 rocket = "0.5.0-rc.2"
-diesel = { version = "1.4.4", features = ["mysql"] }
 [dependencies.rocket_dyn_templates]
 version = "0.1.0-rc.2"
 features = ["handlebars"]
-[dependencies.rocket_sync_db_pools]
-features = ["diesel_mysql_pool"]
+[dependencies.rocket_db_pools]
+features = ["sqlx_mysql"]
 version = "0.1.0-rc.2"
 #[dependencies.diesel_mysql]
 

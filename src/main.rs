@@ -1,55 +1,47 @@
 #[macro_use] extern crate rocket;
 //pub mod schema;
 //mod models;
-
-use diesel::Connection;
 use rocket::response::Redirect;
 use rocket_dyn_templates::Template;
 use rocket_dyn_templates::context;
 use rocket::form::Form;
 use rand::Rng;
-use rocket_sync_db_pools::{database, diesel};    
+use rocket_db_pools::{Database, sqlx, Connection};    
+use sqlx::Row;
+use rocket::futures::TryStreamExt;
 
-#[database("users")]
-struct UserDatabase(diesel::MysqlConnection);
-
-
-/*fn main() {
-    rocket::Ignite()
-        .attach(UserDatabase.fairing())
-        .launch();
-}
-*/
 
 #[get("/")]
 fn index() -> Template {
     Template::render("login", context! {id:1})
 }
 
-#[derive(diesel::Queryable)]
-pub struct Test {
-    id:i32
-}
+#[derive(Database)]
+#[database("users")]
+pub struct Users(sqlx::MySqlPool);
 
-#[derive(diesel::Queryable)]
-pub struct User {
-    id:i32,
-    name:String,
-    age:u32
+/*
+#[derive(sqlx::)]
+struct User{
+    id: i32,
+    name: String,
+    age: i32,
 }
+*/
 
-fn do_something(conn: &diesel::MysqlConnection) -> String {
-    //let r2 = diesel::sql_query("SELECT * from USERS").load::<User>(conn);
-    //let results:Result<Vec<User>> = diesel::RunQueryDsl::load(diesel::sql_query("SELECT * from USERS"), conn).ok();
-    return "".to_string();
-
-}
 
 #[get("/users")]
-async fn users(conn: UserDatabase) -> String {
-    let mut results = 0;
-    //conn.run(|x| x.);
-    return (format!("{} users loading", results));
+async fn users(mut conn: Connection<Users>) -> String {
+    let mut page = "start\n".to_string();
+    let mut rs = sqlx::query("SELECT * FROM USERS").fetch(&mut *conn);
+    while let Some(row) = rs.try_next().await.ok() {
+        let s = format!("{:?}", row.unwrap());
+       page = page + (s.as_str());
+    }
+    page = page + "\nend";
+
+
+    return page;
 }
 #[derive(FromForm)]
 struct Login<'r> {
@@ -100,7 +92,7 @@ fn ping() -> String {
 fn rocket() -> _ {
     rocket::build().mount("/", routes![users, random_int, index, template_test, check_login, homepage, ping])
         .attach(Template::fairing())
-        .attach(UserDatabase::fairing())
+        .attach(Users::init())
 }
 
 
