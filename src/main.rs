@@ -34,8 +34,21 @@ struct User{
 async fn users(mut conn: Connection<Users>) -> String {
     let mut page = "start\n".to_string();
     let mut rs = sqlx::query("SELECT * FROM USERS").fetch(&mut *conn);
+    let mut count = 0;
     while let Some(row) = rs.try_next().await.ok() {
-        let s = format!("{:?}", row.unwrap());
+        count += 1;
+        if count > 10 {
+            break;
+        }
+        let s = match row {
+            Some(r) => {
+                let p:u32 = r.get(0);
+                let n:String = r.get(1);
+                let a:i32 = r.get(2);
+                format!("{}|{}|{}\n", p, n, a)
+            },
+            None => String::from("...")
+        };
        page = page + (s.as_str());
     }
     page = page + "\nend";
