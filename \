@@ -8,6 +8,7 @@ use rocket::form::Form;
 use rand::Rng;
 use rocket_db_pools::{Database, sqlx, Connection};    
 use sqlx::Row;
+use rocket::futures::TryStreamExt;
 
 
 #[get("/")]
@@ -19,45 +20,60 @@ fn index() -> Template {
 #[database("users")]
 pub struct Users(sqlx::MySqlPool);
 
-
-#[derive(Debug)]
+/*
+#[derive(sqlx::)]
 struct User{
-    id: u32,
+    id: i32,
     name: String,
     age: i32,
 }
+*/
 
-impl sqlx::FromRow<'_, sqlx::mysql::MySqlRow> for User {
-    fn from_row(row: &sqlx::mysql::MySqlRow) -> Result<Self, sqlx::Error> {
-        Ok(
-            User {
-                id: row.try_get("id")?,
-                name: row.try_get("name")?,
-                age: row.try_get("age")?,
-            }
-        )
-    }
-}
-
-
-#[get("/user/<id>")]
-async fn show_user(mut conn: Connection<Users>, id:u32) -> String {
-    match sqlx::query_as::<_, User>("SELECT * FROM USERS where id=?")
-        .bind(id)
-        .fetch_one(&mut *conn).await
-        .ok() {
-            Some(user) => format!("{:?}\n", user),
-            None => String::from("no user found")
-        }
-}
 
 #[get("/users")]
-async fn all_users(mut conn: Connection<Users>) -> String {
-    let users:Vec<User> = sqlx::query_as("SELECT * FROM USERS").fetch_all(&mut *conn).await.ok().unwrap();
-    return users.iter()
-        .map(|user| format!("{:?}\n", user))
-        .reduce(|accum, user| accum + user.as_str())
-        .unwrap_or(String::from("no users"));
+async fn users(mut conn: Connection<Users>) -> String {
+    let mut page = "start\n".to_string();
+    let mut rs = sqlx::query!("SELECT * FROM USERS").fetch(&mut *conn);
+    let mut count = 0;
+    while let Some(row) = rs.try_next().await.ok() {
+        count += 1;
+        if count > 10 {
+            break;
+        }
+        let s = match row {
+            Some(r) => {
+                let p:u32 = r.get(0);
+                let n:String = r.get(1);
+                let a:i32 = r.get(2);
+                format!("{}|{}|{}\n", p, n, a)
+            },
+            None => String::from("...")
+        };
+       page = page + (s.as_str());
+    }
+    page = page + "\nend";
+
+
+    let mut rs = sqlx::query!("SELECT * FROM USERS").fetch_all(&mut *conn);
+    let mut count = 0;
+    while let Some(row) = rs.try_next().await {
+        count += 1;
+        if count > 10 {
+            break;
+        }
+        let s = match row {
+            Some(r) => {
+                let p:u32 = r.get(0);
+                let n:String = r.get(1);
+                let a:i32 = r.get(2);
+                format!("{}|{}|{}\n", p, n, a)
+            },
+            None => String::from("...")
+        };
+       page = page + (s.as_str());
+    }
+
+    return page;
 }
 #[derive(FromForm)]
 struct Login<'r> {
@@ -106,7 +122,7 @@ fn ping() -> String {
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![all_users, show_user, random_int, index, template_test, check_login, homepage, ping])
+    rocket::build().mount("/", routes![users, random_int, index, template_test, check_login, homepage, ping])
         .attach(Template::fairing())
         .attach(Users::init())
 }
