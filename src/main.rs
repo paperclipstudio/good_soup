@@ -1,14 +1,13 @@
 #[macro_use] extern crate rocket;
 //pub mod schema;
-//mod models;
 use rocket::response::Redirect;
 use rocket_dyn_templates::Template;
 use rocket_dyn_templates::context;
 use rocket::form::Form;
 use rand::Rng;
 use rocket_db_pools::{Database, sqlx, Connection};    
-use sqlx::Row;
-
+mod models;
+use models::user::User;
 
 #[get("/")]
 fn index() -> Template {
@@ -20,33 +19,13 @@ fn index() -> Template {
 pub struct Users(sqlx::MySqlPool);
 
 
-#[derive(Debug)]
-struct User{
-    id: u32,
-    name: String,
-    age: i32,
-}
-
-impl sqlx::FromRow<'_, sqlx::mysql::MySqlRow> for User {
-    fn from_row(row: &sqlx::mysql::MySqlRow) -> Result<Self, sqlx::Error> {
-        Ok(
-            User {
-                id: row.try_get("id")?,
-                name: row.try_get("name")?,
-                age: row.try_get("age")?,
-            }
-        )
-    }
-}
-
-
 #[get("/user/<id>")]
 async fn show_user(mut conn: Connection<Users>, id:u32) -> String {
     match sqlx::query_as::<_, User>("SELECT * FROM USERS where id=?")
         .bind(id)
         .fetch_one(&mut *conn).await
         .ok() {
-            Some(user) => format!("{:?}\n", user),
+            Some(user) => format!("{user}"),
             None => String::from("no user found")
         }
 }
@@ -54,11 +33,9 @@ async fn show_user(mut conn: Connection<Users>, id:u32) -> String {
 #[get("/users")]
 async fn all_users(mut conn: Connection<Users>) -> String {
     let users:Vec<User> = sqlx::query_as("SELECT * FROM USERS").fetch_all(&mut *conn).await.ok().unwrap();
-    return users.iter()
-        .map(|user| format!("{:?}\n", user))
-        .reduce(|accum, user| accum + user.as_str())
-        .unwrap_or(String::from("no users"));
+    return users.iter().map(|user| user.to_string() + "\n").collect::<Vec<String>>().concat()
 }
+
 #[derive(FromForm)]
 struct Login<'r> {
     email:&'r str,
