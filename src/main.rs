@@ -8,6 +8,7 @@ use rand::Rng;
 use rocket_db_pools::{Database, sqlx, Connection};    
 mod models;
 use models::user::User;
+use models::account::Account;
 
 #[get("/")]
 fn index() -> Template {
@@ -50,8 +51,8 @@ fn random_int(max:u32) -> String {
 }
 
 #[post("/login", data="<login>")]
-fn check_login(login:Form<Login>) -> Redirect {
-    return if login.email == login.password {
+async fn check_login(conn: Connection<Users>, login:Form<Login<'_>>) -> Redirect {
+    return if models::account::Account::verify(conn, login.email, login.password).await {
         println!("You have logged in");
         Redirect::to("/homepage")
     } else {
@@ -60,10 +61,18 @@ fn check_login(login:Form<Login>) -> Redirect {
     }
 }
 
+#[get("/accounts")]
+async fn all_accounts(mut conn: Connection<Users>) -> String {
+    let account:Vec<Account> = sqlx::query_as("SELECT * FROM Accounts").fetch_all(&mut *conn).await
+        .expect("count not connect to Accounts table");
+    return account.iter().map(|account| account.to_string() + "\n").collect::<Vec<String>>().concat();
+}
+
 #[get("/homepage")]
 fn homepage() -> Template {
     Template::render("homepage", context! {
-        id: 1
+        id: 1,
+
     })
 }
 
@@ -83,7 +92,10 @@ fn ping() -> String {
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![all_users, show_user, random_int, index, template_test, check_login, homepage, ping])
+    rocket::build().mount("/", routes![
+                          all_users, show_user, 
+                          all_accounts, 
+                          random_int, index, template_test, check_login, homepage, ping])
         .attach(Template::fairing())
         .attach(Users::init())
 }
