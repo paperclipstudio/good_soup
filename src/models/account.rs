@@ -14,27 +14,28 @@ pub struct Account {
     id:i32,
     email:String,
     password:String,
-    salt:Option<i32>,
+    salt:Option<i32>
 }
 
 impl Account {
+
     pub async fn get(mut conn: Connection<Users>, id:u32) -> Option<Account> {
-        Some(query_as("Select * from Account where id = ?")
+        Some(query_as("Select * from Accounts where id = ?")
             .bind(id)
             .fetch_one(&mut *conn).await
-            .expect("Couldn't get Account"))
+            .expect("Couldn't get Accounts"))
     }
     
 
     pub async fn get_all(mut conn: Connection<Users>) -> Vec<Account> {
-        Some(query_as("Select Email, Password from Account")
+        Some(query_as("Select * from Accounts")
             .fetch_all(&mut *conn).await
-            .expect("Couldn't get Account")).unwrap()
+            .expect("Getting Email and passwords from Accounts")).unwrap()
     }
 
     pub async fn verify(mut conn: Connection<Users>, email:&str, password:&str) -> bool {
         println!("{}, {}",email, password);
-        let result:Result<Account,_> = query_as("Select * from Accounts where Email=? and Password=?")
+        let result:Result<Account, _> = query_as("Select * from Accountss where Email=? and Password=?")
             .bind(email)
             .bind(password)
             .fetch_one(&mut *conn).await;
@@ -48,7 +49,12 @@ impl Account {
     }
 
     pub fn to_string(&self) -> String {
-        format!("id:{}, un:{}, pw:{}", self.id, self.email, self.password)
+        format!("id:{}, un:{}, pw:{}, salt:{:?}", 
+                self.id, 
+                self.email, 
+                self.password, 
+                self.salt
+                )
     }
 }
 
