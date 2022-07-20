@@ -8,7 +8,8 @@ use rand::Rng;
 use rocket_db_pools::{Database, sqlx, Connection};    
 mod models;
 use models::user::User;
-use models::account::Account;
+mod account;
+use crate::account::*;
 
 #[get("/")]
 fn index() -> Template {
@@ -61,18 +62,11 @@ async fn check_login(conn: Connection<Users>, login:Form<Login<'_>>) -> Redirect
     }
 }
 
-#[get("/accounts")]
-async fn all_accounts(mut conn: Connection<Users>) -> String {
-    let account:Vec<Account> = sqlx::query_as("SELECT * FROM Accounts").fetch_all(&mut *conn).await
-        .expect("count not connect to Accounts table");
-    return account.iter().map(|account| account.to_string() + "\n").collect::<Vec<String>>().concat();
-}
 
 #[get("/homepage")]
 fn homepage() -> Template {
     Template::render("homepage", context! {
         id: 1,
-
     })
 }
 
@@ -95,6 +89,7 @@ fn rocket() -> _ {
     rocket::build().mount("/", routes![
                           all_users, show_user, 
                           all_accounts, 
+                          show_account,
                           random_int, index, template_test, check_login, homepage, ping])
         .attach(Template::fairing())
         .attach(Users::init())

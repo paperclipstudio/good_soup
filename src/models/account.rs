@@ -1,14 +1,15 @@
-use rocket_db_pools::sqlx::{Row, mysql, query, query_as, FromRow, Error };
+use rocket_db_pools::sqlx::{Row, mysql, query_as, FromRow, Error };
 use rocket_db_pools::Connection;
 use super::super::Users;
 
-
+#[allow(dead_code)]
 enum AccountType {
     Renter,
     Letter,
     Admin
 }
 
+#[allow(dead_code)]
 pub struct Account {
     id:i32,
     email:String,
