@@ -9,6 +9,12 @@ Back-end Language: Rust 🦀
 Front-end Language: Typescript 😁
 
 
+## Running code
+ - [] Need access to a MySQL Database
+ - [] Need to set a port with `export ROCKET_PORT=<port number>` (put in .bashrc)
+ - [] call `Cargo run`
+
+
 ## Site map
 
 ### Product
