@@ -20,6 +20,9 @@ fn index() -> Template {
 #[database("users")]
 pub struct Users(sqlx::MySqlPool);
 
+#[derive(Database)]
+#[database("test")]
+pub struct Test(sqlx::MySqlPool);
 
 #[get("/user/<id>")]
 async fn show_user(mut conn: Connection<Users>, id:u32) -> String {
