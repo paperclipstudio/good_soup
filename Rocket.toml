@@ -1,5 +1,5 @@
 [default]
-address = "192.168.0.81"
+address = "0.0.0.0"
 workers = 16
 max_blocking = 512
 keep_alive = 5
@@ -9,5 +9,8 @@ temp_dir = "/tmp"
 cli_colors = true
 
 
-[global.databases.users]
-url = "mysql://remote@192.168.0.84/USERS"
+[default.databases.sqlx]
+url = "/home/george/git/good_soup/db/db.sqlite"
+
+[global.databases]
+sqlite_db = { url = "db.sqlite" }

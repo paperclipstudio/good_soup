@@ -1,16 +1,21 @@
 use rocket_db_pools::sqlx;
 use std::fmt;
 use sqlx::Row;
+use rocket::serde::Deserialize;
+use rocket::serde::Serialize;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
 pub struct User{
     id: u32,
     name: String,
     age: i32,
 }
 
-impl sqlx::FromRow<'_, sqlx::mysql::MySqlRow> for User {
-    fn from_row(row: &sqlx::mysql::MySqlRow) -> Result<Self, sqlx::Error> {
+
+#[rocket::async_trait]
+impl<'r> sqlx::FromRow<'r, sqlx::sqlite::SqliteRow> for User {
+    fn from_row(row: &'r sqlx::sqlite::SqliteRow) -> Result<Self, sqlx::Error> {
         Ok(
             User {
                 id: row.try_get("id")?,

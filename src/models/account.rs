@@ -1,41 +1,45 @@
-use rocket_db_pools::sqlx::{Row, mysql, query_as, FromRow, Error };
+use rocket_db_pools::sqlx::{FromRow, query_as, Error, sqlite, query};
 use rocket_db_pools::Connection;
+use rocket_db_pools::sqlx;
+use rocket::serde::Deserialize;
+use rocket::serde::Serialize;
 use super::super::Users;
+use rocket::futures::StreamExt;
 
-#[allow(dead_code)]
 enum AccountType {
     Renter,
     Letter,
     Admin
 }
 
-#[allow(dead_code)]
+#[derive(sqlx::FromRow)]
+#[derive(Debug, Clone, Deserialize, Serialize)]
+#[serde(crate = "rocket::serde")]
 pub struct Account {
     id:i32,
     email:String,
-    password:String,
+    password:String, 
     salt:Option<i32>
 }
 
 impl Account {
-
     pub async fn get(mut conn: Connection<Users>, id:u32) -> Option<Account> {
-        Some(query_as("Select * from Accounts where id = ?")
+        Some(query!("Select * from Accounts where id = ?")
             .bind(id)
-            .fetch_one(&mut *conn).await
+            .fetch(&mut *conn).await
             .expect("Couldn't get Accounts"))
     }
     
 
     pub async fn get_all(mut conn: Connection<Users>) -> Vec<Account> {
-        Some(query_as("Select * from Accounts")
-            .fetch_all(&mut *conn).await
-            .expect("Getting Email and passwords from Accounts")).unwrap()
+        query!("Select * from Accounts")
+            .fetch(&mut *conn)
+            .collect()
     }
 
     pub async fn verify(mut conn: Connection<Users>, email:&str, password:&str) -> bool {
         println!("{}, {}",email, password);
-        let result:Result<Account, _> = query_as("Select * from Accountss where Email=? and Password=?")
+        let result:Result<Account, _> = query_as!(Account, "Select * from Accountss where Email=? and Password=?")
             .bind(email)
             .bind(password)
             .fetch_one(&mut *conn).await;
@@ -58,9 +62,9 @@ impl Account {
     }
 }
 
-
-impl FromRow<'_, mysql::MySqlRow> for Account {
-    fn from_row(row: &mysql::MySqlRow) -> Result<Self, Error> {
+/*
+impl<'r> FromRow<'r, sqlite::SqliteRow> for Account {
+    fn from_row(row: &'r sqlite::SqliteRow) -> Result<Self, Error> {
         Ok(
             Account {
                 id: row.try_get("Id")?,
@@ -71,4 +75,4 @@ impl FromRow<'_, mysql::MySqlRow> for Account {
         )
     }
 }
-
+*/

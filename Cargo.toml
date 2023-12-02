@@ -7,14 +7,18 @@ edition = "2021"
 
 [dependencies]
 rand = "0.7.3"
-rocket = "0.5.0-rc.2"
+rocket = "0.5.0"
 string-builder = "0.2.0"
 [dependencies.rocket_dyn_templates]
-version = "0.1.0-rc.2"
+version = "0.1.0"
 features = ["handlebars"]
 [dependencies.rocket_db_pools]
-features = ["sqlx_mysql"]
-version = "0.1.0-rc.2"
+features = ["sqlx_sqlite"]
+version = "0.1.0"
+[dependencies.sqlx]
+features = ["macros", "migrate"]
+default_features = false
+version = "0.7"
 #[dependencies.diesel_mysql]
 
 #//[dependencies.rocket_db_pools]
