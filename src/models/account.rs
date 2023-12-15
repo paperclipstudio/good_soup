@@ -1,10 +1,9 @@
+#![allow(dead_code)]
 use rocket_db_pools::sqlx::{FromRow, query_as, Error, sqlite, query, Row};
 use rocket_db_pools::Connection;
-use rocket_db_pools::sqlx;
 use rocket::serde::Deserialize;
 use rocket::serde::Serialize;
 use super::super::Users;
-use rocket::futures::StreamExt;
 
 enum AccountType {
     Renter,

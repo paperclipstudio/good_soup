@@ -1,7 +1,6 @@
 use rocket_db_pools::sqlx;
 use std::fmt;
 use sqlx::Row;
-use sqlx::FromRow;
 use rocket::serde::Deserialize;
 use rocket::serde::Serialize;
 

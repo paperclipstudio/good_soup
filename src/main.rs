@@ -21,9 +21,9 @@ fn index() -> Template {
 #[database("users")]
 pub struct Users(sqlx::SqlitePool);
 
-#[derive(Database)]
-#[database("acounts")]
-pub struct Accounts(sqlx::SqlitePool);
+//#[derive(Database)]
+//#[database("acounts")]
+//pub struct Accounts(sqlx::SqlitePool);
 
 #[derive(Database)]
 #[database("test")]
@@ -34,28 +34,24 @@ async fn show_user(mut conn: Connection<Users>, id:u32) -> Option<String> {
     sqlx::query("SELECT * FROM USERS where id=?")
         .bind(id)
         .fetch_one(&mut **conn).await.as_ref()
-        .and_then(|r| Ok(User::from_row(r)
-                         .ok()
-                         .unwrap()
-                         .to_string()))
         .ok()
+        .and_then(|r| User::from_row(r).ok())
+        .and_then(|r| Some(r.to_string()))
 }
 
 #[get("/users")]
 async fn all_users(mut conn: Connection<Users>) -> String {
     let users:Vec<User> = sqlx::query_as("SELECT * FROM USERS")
         .fetch_all(&mut **conn)
-        .await.ok().unwrap();
+        .await.ok().unwrap_or_default();
     return users.iter().map(|user| user.to_string() + "\n").collect::<Vec<String>>().concat()
 }
-/*
 
 #[derive(FromForm)]
 struct Login<'r> {
     email:&'r str,
     password:&'r str
 }
-*/
 
 #[get("/random/<max>")]
 fn random_int(max:u32) -> String {
@@ -64,7 +60,6 @@ fn random_int(max:u32) -> String {
     return format!("This is a value between 0 and {}\n-> {}", max, value.to_string());
 }
 
-/*
 #[post("/login", data="<login>")]
 async fn check_login(conn: Connection<Users>, login:Form<Login<'_>>) -> Redirect {
     return if models::account::Account::verify(conn, login.email, login.password).await {
@@ -75,8 +70,6 @@ async fn check_login(conn: Connection<Users>, login:Form<Login<'_>>) -> Redirect
         Redirect::to("/")
     }
 }
-*/
-
 
 #[get("/homepage")]
 fn homepage() -> Template {
@@ -101,14 +94,15 @@ fn ping() -> String {
 
 #[launch]
 fn rocket() -> _ {
-    rocket::build().mount("/", routes![
-                          //all_users, show_user, 
-                          //all_accounts, 
-                          //show_account,
-                          //check_login
-                          random_int, index, template_test, homepage, ping])
+    rocket::build()
         .attach(Template::fairing())
         .attach(Users::init())
-        .attach(Test::init())
+        //.attach(Test::init())
+        .mount("/", routes![
+                          all_users, show_user, 
+                          //all_accounts, 
+                          //show_account,
+                          check_login,
+                          random_int, index, template_test, homepage, ping])
 }
 

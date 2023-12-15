@@ -11,9 +11,9 @@ cli_colors = true
 [default.databases.users]
 url = "db.sqlite"
 
-[default.databases.test]
-url = "database.sqlite"
+#[default.databases.test]
+#url = "database.sqlite"
 
 
-[default.databases.accounts]
-url = "database.sqlite"
+#[default.databases.accounts]
+#url = "database.sqlite"
