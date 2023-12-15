@@ -8,9 +8,12 @@ log_level = "normal"
 temp_dir = "/tmp"
 cli_colors = true
 
+[default.databases.users]
+url = "db.sqlite"
 
-[default.databases.sqlx]
-url = "/home/george/git/good_soup/db/db.sqlite"
+[default.databases.test]
+url = "database.sqlite"
 
-[global.databases]
-sqlite_db = { url = "db.sqlite" }
+
+[default.databases.accounts]
+url = "database.sqlite"

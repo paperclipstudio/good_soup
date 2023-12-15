@@ -1,4 +1,4 @@
-use rocket_db_pools::sqlx::{FromRow, query_as, Error, sqlite, query};
+use rocket_db_pools::sqlx::{FromRow, query_as, Error, sqlite, query, Row};
 use rocket_db_pools::Connection;
 use rocket_db_pools::sqlx;
 use rocket::serde::Deserialize;
@@ -12,7 +12,6 @@ enum AccountType {
     Admin
 }
 
-#[derive(sqlx::FromRow)]
 #[derive(Debug, Clone, Deserialize, Serialize)]
 #[serde(crate = "rocket::serde")]
 pub struct Account {
@@ -24,25 +23,31 @@ pub struct Account {
 
 impl Account {
     pub async fn get(mut conn: Connection<Users>, id:u32) -> Option<Account> {
-        Some(query!("Select * from Accounts where id = ?")
+        let result: Account = query("Select * from Accounts where id = ?")
             .bind(id)
-            .fetch(&mut *conn).await
-            .expect("Couldn't get Accounts"))
+            .fetch_one(&mut **conn)
+            .await
+            .as_ref()
+            .and_then(|r| Ok(Account::from_row(r)))
+            .unwrap().unwrap();
+        return Some(result);
+            
     }
     
 
     pub async fn get_all(mut conn: Connection<Users>) -> Vec<Account> {
-        query!("Select * from Accounts")
-            .fetch(&mut *conn)
-            .collect()
+        query_as::<_, Account>("Select * from Accounts")
+            .fetch_all(&mut **conn)
+            .await
+            .unwrap_or(Vec::new())
     }
 
     pub async fn verify(mut conn: Connection<Users>, email:&str, password:&str) -> bool {
         println!("{}, {}",email, password);
-        let result:Result<Account, _> = query_as!(Account, "Select * from Accountss where Email=? and Password=?")
+        let result:Result<Account, _> = query_as("Select * from Accounts where Email=? and Password=?")
             .bind(email)
             .bind(password)
-            .fetch_one(&mut *conn).await;
+            .fetch_one(&mut **conn).await;
         return match result {
             Ok(_) => true,
             Err(e) => {
@@ -62,7 +67,6 @@ impl Account {
     }
 }
 
-/*
 impl<'r> FromRow<'r, sqlite::SqliteRow> for Account {
     fn from_row(row: &'r sqlite::SqliteRow) -> Result<Self, Error> {
         Ok(
@@ -75,4 +79,3 @@ impl<'r> FromRow<'r, sqlite::SqliteRow> for Account {
         )
     }
 }
-*/
