@@ -10,9 +10,7 @@ Front-end Language: Typescript 😁
 
 
 ## Running code
- - [] Need access to a MySQL Database
- - [] Need to set a port with `export ROCKET_PORT=<port number>` (put in .bashrc)
- - [] call `Cargo run`
+ 1. call `Cargo run`
 
 
 ## Site map
@@ -22,7 +20,7 @@ Front-end Language: Typescript 😁
 [/user/<id>] Display information about user with that ID
 ### For Development only
 [/users] Display list of all users (To remove in production)
-[/accounts] Displays list of all user accounts with passwords
+**TODO** [/accounts] Displays list of all user accounts with passwords
 ### MISC
 [/ping] gives page that says pong
 [/random/<max>] give a random number between 0 and <max>
