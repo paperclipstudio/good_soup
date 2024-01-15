@@ -9,7 +9,7 @@ temp_dir = "/tmp"
 cli_colors = true
 
 [default.databases.users]
-url = "db.sqlite"
+url = "database/users.sqlite"
 
 #[default.databases.test]
 #url = "database.sqlite"

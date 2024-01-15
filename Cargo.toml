@@ -13,12 +13,14 @@ string-builder = "0.2.0"
 version = "0.1.0"
 features = ["handlebars"]
 [dependencies.rocket_db_pools]
-features = ["sqlx_sqlite"]
 version = "0.1.0"
-[dependencies.sqlx]
-features = ["macros", "migrate"]
-default_features = false
-version = "0.7"
+features = ["sqlx_sqlite"]
+[default.databases.users]
+url = "/database/users.sqlite"
+#[dependencies.sqlx]
+#features = ["macros", "migrate"]
+#default_features = false
+#version = "0.7"
 #[dependencies.diesel_mysql]
 
 #//[dependencies.rocket_db_pools]

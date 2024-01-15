@@ -9,12 +9,12 @@ use rand::Rng;
 use rocket_db_pools::{Database, sqlx, Connection};    
 mod models;
 use models::user::User;
-//od account;
-//use crate::account::*;
+mod account;
+use crate::account::*;
 
 #[get("/")]
 fn index() -> Template {
-    Template::render("login", context! {id:1})
+    Template::render("index", 1)
 }
 
 #[derive(Database)]
@@ -29,6 +29,12 @@ pub struct Users(sqlx::SqlitePool);
 #[database("test")]
 pub struct Test(sqlx::SqlitePool);
 
+#[derive(FromForm)]
+struct UserDetail<'r> {
+    id: Option<i32>,
+    name:&'r str
+}
+
 #[get("/user/<id>")]
 async fn show_user(mut conn: Connection<Users>, id:u32) -> Option<String> {
     sqlx::query("SELECT * FROM USERS where id=?")
@@ -39,12 +45,33 @@ async fn show_user(mut conn: Connection<Users>, id:u32) -> Option<String> {
         .and_then(|r| Some(r.to_string()))
 }
 
+#[post("/user/add", data="<user>")]
+async fn add_user(mut conn: Connection<Users>, user:Form<UserDetail<'_>>) -> Option<String> {
+    if user.id.is_some() {
+        return None
+    }
+    sqlx::query("INSERT VALUES * INTO FROM USERS where id=?")
+        .bind(user.name)
+        .fetch_one(&mut **conn).await.as_ref()
+        .ok()
+        .and_then(|r| User::from_row(r).ok())
+        .and_then(|r| Some(r.to_string()))
+}
+
 #[get("/users")]
-async fn all_users(mut conn: Connection<Users>) -> String {
+async fn all_users(mut conn: Connection<Users>) -> Template {
+    //let all: Vec<User> = sqlx::query_as("SELECT * FROM USERS").fetch_all(&mut **conn).await.ok().unwrap();
+    //println!(">>{:?}", all);
+
     let users:Vec<User> = sqlx::query_as("SELECT * FROM USERS")
         .fetch_all(&mut **conn)
         .await.ok().unwrap_or_default();
-    return users.iter().map(|user| user.to_string() + "\n").collect::<Vec<String>>().concat()
+    for user in users.iter() {
+        println!("{}", user)
+    }
+    return Template::render("list_of_users", context!{
+        users: users
+    });
 }
 
 #[derive(FromForm)]
@@ -71,6 +98,18 @@ async fn check_login(conn: Connection<Users>, login:Form<Login<'_>>) -> Redirect
     }
 }
 
+/*
+#[post("/signup", data="<account>")]
+async fn check_login(conn: Connection<Users>, login:Form<Account<'_>>) -> Redirect {
+    return if models::account::Account::verify(conn, login.email, login.password).await {
+        println!("You have logged in");
+        Redirect::to("/homepage")
+    } else {
+        println!("Login failed for {}", login.email);
+        Redirect::to("/")
+    }
+}
+*/
 #[get("/homepage")]
 fn homepage() -> Template {
     Template::render("homepage", context! {
