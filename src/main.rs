@@ -98,7 +98,6 @@ async fn check_login(conn: Connection<Users>, login:Form<Login<'_>>) -> Redirect
     }
 }
 
-/*
 #[post("/signup", data="<account>")]
 async fn check_login(conn: Connection<Users>, login:Form<Account<'_>>) -> Redirect {
     return if models::account::Account::verify(conn, login.email, login.password).await {
@@ -109,7 +108,7 @@ async fn check_login(conn: Connection<Users>, login:Form<Account<'_>>) -> Redire
         Redirect::to("/")
     }
 }
-*/
+
 #[get("/homepage")]
 fn homepage() -> Template {
     Template::render("homepage", context! {
